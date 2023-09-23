@@ -5,6 +5,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
 const [name,setname]=useState("")
 const [price,setprice]=useState(0)
+const [pic, setPic] = useState("");
 
   useEffect(() => {
     axios.get("http://localhost:8000/api/products").then((response) => {
@@ -16,6 +17,8 @@ const [price,setprice]=useState(0)
     const formData = new FormData();
     formData.append('name',name);
     formData.append('price',price);
+    formData.append('path',pic[0])
+    console.log(formData);
 
 
     try {
@@ -44,7 +47,9 @@ const [price,setprice]=useState(0)
       console.error("Error adding player:", error);
     }
     }
-
+    const handlePic = (e) => {
+      setPic(e.target.files) // Update the age state when input changes
+    };
 
 
   return (
@@ -63,6 +68,7 @@ const [price,setprice]=useState(0)
 <div>
   <input type="text" value={name} onChange={(e)=>setname(e.target.value)} />
   <input type="number" value={price} onChange={(e)=>setprice(e.target.value)} />
+  <input type="file" onChange={handlePic} />
   <button onClick={handleSumbit}>Put Product</button>
 </div>
 

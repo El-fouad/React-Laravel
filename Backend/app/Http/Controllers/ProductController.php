@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -13,39 +16,60 @@ class ProductController extends Controller
         return $product ;
     }
     
-    public function store(Request $request) {
-        // Create a new Player instance
-        $data = new Product;
-        
-        // Populate the Player instance with data from the request
-        $data->name = $request->input('name');
-        $data->price = $request->input('price');
-        // Add more fields as needed
-        
-        // Save the Player record to the database
-        $data->save();
-    }
-    public function update(Request $request, $id)
+    public function store(Request $request)
     {
-        // Find the product by ID
-        $product = Product::findOrFail($id);
-    
         // Validate the request data
         $request->validate([
             'name' => 'required',
             'price' => 'numeric',
-            // Add any other validation rules as needed
+            'path' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+ // Adjust validation rules as needed
         ]);
     
-        // Update the product's data
+        // Create a new Product instance
+        $product = new Product;
+    
+        // Populate the Product instance with data from the request
         $product->name = $request->input('name');
         $product->price = $request->input('price');
-        // Add more fields as needed
     
-        // Save the updated product
+        // Handle picture upload and save the picture path
+        if ($request->hasFile('path')) {
+            $picture = $request->file('path');
+            $picturePath = $picture->store('product_pictures', 'public'); // Customize the path as needed
+            $product->path = $picturePath;
+        }
+    
+        // Save the Product record to the database
         $product->save();
     
         // Optionally, return a response to indicate success
+        return response()->json(['message' => 'Product created successfully']);
+    }
+    
+
+
+    
+    public function update(Request  $request, $id)
+    {
+
+        
+        $product = Product::findOrFail($id);
+    
+        $product->name = $request->input('name');
+        $product->price = $request->input('price');
+    
+        if ($request->hasFile('path')) {
+            if ($product->picture) {
+                Storage::disk('public')->delete($product->picture);
+            }
+    
+            $newPicture = $request->file('path');
+            $newPicturePath = $newPicture->store('product_pictures', 'public'); // Customize the path as needed
+            $product->path = $newPicturePath;
+        }
+    
+        $product->save();
         return response()->json(['message' => 'Product updated successfully']);
     }
     
